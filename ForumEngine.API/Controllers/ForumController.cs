@@ -1,27 +1,32 @@
-﻿using ForumEngine.Storage;
+﻿using ForumEngine.API.Models;
+using ForumEngine.Domain.UseCases.GetForums;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace ForumEngine.API.Controllers
 {
     [ApiController]
-    [Route("controller")]
+    [Route("forums")]
     public class ForumController : ControllerBase
     {
         /// <summary>
         /// Get list of every forum
         /// </summary>
-        /// <param name="dbContext"></param>
+        /// <param name="useCase"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(string[]))]
+        [ProducesResponseType(200, Type = typeof(Forum[]))]
         public async Task<IActionResult> GetForums(
-            [FromServices] ForumDbContext dbContext, 
+            [FromServices] IGetForumsUseCase useCase, 
             CancellationToken cancellationToken)
         {
-            var forumTitles = await dbContext.Forums.Select(x => x.Title).ToArrayAsync(cancellationToken);
-            return Ok(forumTitles);
+            var forums = await useCase.Execute(cancellationToken);
+
+            return Ok(forums.Select(x => new Forum
+            {
+                Id = x.Id,
+                Title = x.Title
+            }));
         }            
     }
 }

@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumEngine.Storage", "Foru
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumEngine.API", "ForumEngine.API\ForumEngine.API.csproj", "{BE40651A-739B-4DE7-AC86-F6D28B5C2620}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ForumEngine.Domain.Tests", "ForumEngine.Domain.Tests\ForumEngine.Domain.Tests.csproj", "{A5210F07-1CFC-4B1F-94BD-89A9E2B5C0C3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -32,6 +34,10 @@ Global
 		{BE40651A-739B-4DE7-AC86-F6D28B5C2620}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE40651A-739B-4DE7-AC86-F6D28B5C2620}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE40651A-739B-4DE7-AC86-F6D28B5C2620}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5210F07-1CFC-4B1F-94BD-89A9E2B5C0C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5210F07-1CFC-4B1F-94BD-89A9E2B5C0C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5210F07-1CFC-4B1F-94BD-89A9E2B5C0C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5210F07-1CFC-4B1F-94BD-89A9E2B5C0C3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

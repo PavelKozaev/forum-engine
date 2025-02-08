@@ -21,7 +21,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ForumEngine.Domain\ForumEngine.Domain.csproj" />
     <ProjectReference Include="..\ForumEngine.Storage\ForumEngine.Storage.csproj" />
   </ItemGroup>
-
+	
 </Project>
