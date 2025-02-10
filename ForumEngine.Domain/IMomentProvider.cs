@@ -7,6 +7,6 @@
 
     public class MomentProvider : IMomentProvider
     {
-        public DateTimeOffset Now => DateTimeOffset.Now;
+        public DateTimeOffset Now => DateTimeOffset.UtcNow;
     }
 }

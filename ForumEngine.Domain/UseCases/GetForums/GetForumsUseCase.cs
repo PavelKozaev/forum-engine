@@ -1,25 +1,17 @@
-﻿using ForumEngine.Storage;
-using Microsoft.EntityFrameworkCore;
-
-namespace ForumEngine.Domain.UseCases.GetForums
+﻿namespace ForumEngine.Domain.UseCases.GetForums
 {
     public class GetForumsUseCase : IGetForumsUseCase
     {
-        private readonly ForumDbContext _dbContext;
+        private readonly IGetForumsStorage _storage;
 
-        public GetForumsUseCase(ForumDbContext dbContext)
+        public GetForumsUseCase(
+            IGetForumsStorage storage)
         {
-            _dbContext = dbContext;
+            _storage = storage;
         }
 
-        public async Task<IEnumerable<Models.Forum>> Execute(CancellationToken cancellationToken) =>
-        
-            await _dbContext.Forums.
-                Select(x => new Models.Forum
-                {
-                    Id = x.ForumId,
-                    Title = x.Title
-                }).ToArrayAsync(cancellationToken);
+        public Task<IEnumerable<Models.Forum>> Execute(CancellationToken cancellationToken) => 
+            _storage.GetForums(cancellationToken);
         
     }
 }

@@ -1,93 +1,84 @@
 using FluentAssertions;
 using ForumEngine.Domain.Exceptions;
+using ForumEngine.Domain.Authentication;
 using ForumEngine.Domain.UseCases.CreateTopic;
-using ForumEngine.Storage;
-using Microsoft.EntityFrameworkCore;
 using Moq;
 using Moq.Language.Flow;
+using ForumEngine.Domain.Authorization;
 
 namespace ForumEngine.Domain.Tests
 {
     public class CreateTopicUseCaseShould
     {
         private readonly CreateTopicUseCase sut;
-        private readonly ForumDbContext forumDbContext;
-        private readonly ISetup<IGuidFactory, Guid> createIdSetup;
-        private readonly ISetup<IMomentProvider, DateTimeOffset> getNowSetup;
+        private readonly Mock<ICreateTopicStorage> storage;
+        private readonly ISetup<ICreateTopicStorage, Task<bool>> forumExistsSetup;
+        private readonly ISetup<ICreateTopicStorage, Task<Models.Topic>> createTopicSetup;
+        private readonly ISetup<IIdentity, Guid> getCurrentUserIdSetup;
+        private readonly ISetup<IIntentionManager, bool> intentionIsAllowedSetup;
+        private readonly Mock<IIntentionManager> intentionManger;
 
         public CreateTopicUseCaseShould()
         {
-            var dbContextOptionsBuilder = new DbContextOptionsBuilder<ForumDbContext>()
-                .UseInMemoryDatabase(nameof(CreateTopicUseCaseShould));
-            forumDbContext = new ForumDbContext(dbContextOptionsBuilder.Options);
+            storage = new Mock<ICreateTopicStorage>();
+            forumExistsSetup = storage.Setup(x => x.ForumExists(It.IsAny<Guid>(), It.IsAny<CancellationToken>()));
+            createTopicSetup = storage.Setup(x => x.CreateTopic(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()));
 
-            var guidFactory = new Mock<IGuidFactory>();
-            createIdSetup = guidFactory.Setup(x => x.Create());
+            var identity = new Mock<IIdentity>();
+            var identityProvider = new Mock<IIdentityProvider>();
+            identityProvider.Setup(x => x.Current).Returns(identity.Object);
+            getCurrentUserIdSetup = identity.Setup(x => x.UserId);
 
-            var momentProvider = new Mock<IMomentProvider>();
-            getNowSetup = momentProvider.Setup(x => x.Now);
+            intentionManger = new Mock<IIntentionManager>();
+            intentionIsAllowedSetup = intentionManger.Setup(x => x.IsAllowed(It.IsAny<TopicIntention>()));
 
-            sut = new CreateTopicUseCase(forumDbContext, guidFactory.Object, momentProvider.Object);
+            sut = new CreateTopicUseCase(intentionManger.Object, identityProvider.Object, storage.Object);
+        }
+
+        [Fact]
+        public async Task ThrowIntentionManagerException_WhenTopicCreationIsNotAllowed()
+        {
+            var forumId = Guid.Parse("62b3477c-6c44-4717-8c82-8b95677feb49");
+
+            intentionIsAllowedSetup.Returns(false);
+
+            await sut.Invoking(x => x.Execute(forumId, "Whatever", CancellationToken.None))
+                .Should().ThrowAsync<IntentionManagerException>();
+
+            intentionManger.Verify(x => x.IsAllowed(TopicIntention.Create));
         }
 
         [Fact]
         public async Task ThrowForumNotFoundException_WhetNoMatchingForum()
         {
-            await forumDbContext.Forums.AddAsync(new Storage.Forum
-            {
-                ForumId = Guid.Parse("65b3484c-6c44-4717-8c82-8b95677feb23"),
-                Title = "Basic forum"
-            });
-            await forumDbContext.SaveChangesAsync();
-
             var forumId = Guid.Parse("53b3477c-6c44-4717-8c82-8b95677feb89");
-            var authorId = Guid.Parse("75b3488c-6c44-4717-8c82-9b95677feb43");
 
-            await sut.Invoking(x => x.Execute(forumId, "Some tile", authorId, CancellationToken.None))
+            intentionIsAllowedSetup.Returns(true);
+            forumExistsSetup.ReturnsAsync(false);
+                        
+            await sut.Invoking(x => x.Execute(forumId, "Some tile", CancellationToken.None))
                 .Should().ThrowAsync<ForumNotFoundException>();
+
+            storage.Verify(x => x.ForumExists(forumId, It.IsAny<CancellationToken>()));
         }
 
         [Fact]
-        public async Task ReturnNewlyCreatedTopic()
+        public async Task ReturnNewlyCreatedTopic_WhenMatchingForumExists()
         {
             var forumId = Guid.Parse("54b3484c-6c44-4717-8c82-8b95677feb29");
             var userId = Guid.Parse("82b3484c-6c44-4717-8c82-8b95677feb76");
 
-            await forumDbContext.Forums.AddAsync(new Storage.Forum
-            {
-                ForumId = forumId,
-                Title = "Existing forum"
-            });
-            await forumDbContext.Users.AddAsync(new User
-            {
-                UserId = userId,
-                Login = "Pako"
-            });
-            await forumDbContext.SaveChangesAsync();
+            intentionIsAllowedSetup.Returns(true);
+            forumExistsSetup.ReturnsAsync(true);
+            getCurrentUserIdSetup.Returns(userId);
 
-            createIdSetup.Returns(Guid.Parse("87b3484c-6c44-4717-8c82-8b95677feb33"));
-            getNowSetup.Returns(new DateTimeOffset(2023, 07, 11, 19, 17, 00, TimeSpan.FromHours(3)));
+            var expected = new Models.Topic();
+            createTopicSetup.ReturnsAsync(expected);                       
 
-            var actual = await sut.Execute(forumId, "Hello world", userId, CancellationToken.None);
+            var actual = await sut.Execute(forumId, "Hello world", CancellationToken.None);
+            actual.Should().Be(expected);
 
-            var allTopics = await forumDbContext.Topics.ToArrayAsync();
-            allTopics.Should().BeEquivalentTo(new[]
-            {
-                new Storage.Topic
-                {
-                    ForumId = forumId,
-                    UserId = userId,
-                    Title = "Hello world"
-                }
-            }, cfg => cfg.Including(x => x.ForumId).Including(x => x.UserId).Including(x => x.Title));
-
-            actual.Should().BeEquivalentTo(new Models.Topic
-            {
-                Id = Guid.Parse("87b3484c-6c44-4717-8c82-8b95677feb33"),
-                Title = "Hello world",
-                Author = "Pako",
-                CreatedAt = new DateTimeOffset(2023, 07, 11, 19, 17, 00, TimeSpan.FromHours(3))
-            });
+            storage.Verify(x => x.CreateTopic(forumId, userId, "Hello world", It.IsAny<CancellationToken>()), Times.Once);
         }
     }
 }
