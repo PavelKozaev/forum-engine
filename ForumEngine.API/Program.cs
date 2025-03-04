@@ -8,8 +8,23 @@ using ForumEngine.Domain.UseCases.GetForums;
 using ForumEngine.Storage;
 using ForumEngine.Storage.Storages;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddLogging(b => b.AddSerilog(new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .Enrich.WithProperty("Application", "ForumEngine.API")
+    .Enrich.WithProperty("Environment", builder.Environment.EnvironmentName)
+    .WriteTo.Logger(lc => lc
+        .Filter.ByExcluding(Matching.FromSource("Microsoft"))
+        .WriteTo.OpenSearch(
+            builder.Configuration.GetConnectionString("Logs"),
+            "forum-logs-{0.yyyy.MM.dd}"))
+    .WriteTo.Logger(lc => lc
+        .WriteTo.Console())
+    .CreateLogger()));
 
 builder.Services.AddScoped<IGetForumsUseCase, GetForumsUseCase>();
 builder.Services.AddScoped<IGetForumsStorage, GetForumsStorage>();
