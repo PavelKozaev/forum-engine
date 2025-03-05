@@ -5,7 +5,7 @@ using FluentValidation;
 
 namespace ForumEngine.Domain.UseCases.CreateTopic
 {
-    public class CreateTopicUseCase : ICreateTopicUseCase
+    internal class CreateTopicUseCase : ICreateTopicUseCase
     {
         private readonly IValidator<CreateTopicCommand> _validator;
         private readonly IIntentionManager _intentionManager;

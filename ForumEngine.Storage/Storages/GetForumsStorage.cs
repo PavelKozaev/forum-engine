@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ForumEngine.Storage.Storages
 {
-    public class GetForumsStorage : IGetForumsStorage
+    internal class GetForumsStorage : IGetForumsStorage
     {
         private readonly ForumDbContext _dbContext;
 

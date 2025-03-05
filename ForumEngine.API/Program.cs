@@ -1,13 +1,6 @@
-using FluentValidation;
 using ForumEngine.API.Middlewares;
-using ForumEngine.Domain;
-using ForumEngine.Domain.Authentication;
-using ForumEngine.Domain.Authorization;
-using ForumEngine.Domain.UseCases.CreateTopic;
-using ForumEngine.Domain.UseCases.GetForums;
-using ForumEngine.Storage;
-using ForumEngine.Storage.Storages;
-using Microsoft.EntityFrameworkCore;
+using ForumEngine.Domain.DependencyInjection;
+using ForumEngine.Storage.DependencyInjection;
 using Serilog;
 using Serilog.Filters;
 
@@ -26,26 +19,13 @@ builder.Services.AddLogging(b => b.AddSerilog(new LoggerConfiguration()
         .WriteTo.Console())
     .CreateLogger()));
 
-var connectionString = builder.Configuration.GetConnectionString("Postgres");
-
-builder.Services.AddScoped<IGetForumsUseCase, GetForumsUseCase>();
-builder.Services.AddScoped<IGetForumsStorage, GetForumsStorage>();
-builder.Services.AddScoped<ICreateTopicUseCase, CreateTopicUseCase>();
-builder.Services.AddScoped<ICreateTopicStorage, CreateTopicStorage>();
-builder.Services.AddScoped<IIntentionResolver, TopicIntentionResolver>();
-builder.Services.AddScoped<IIntentionManager, IntentionManager>();
-builder.Services.AddScoped<IIdentityProvider, IdentityProvider>();
-
-builder.Services.AddScoped<IGuidFactory, GuidFactory>();
-builder.Services.AddScoped<IMomentProvider, MomentProvider>();
-
-builder.Services.AddValidatorsFromAssemblyContaining<ForumEngine.Domain.Models.Forum>();
+builder.Services
+    .AddForumDomain()
+    .AddForumStorage(builder.Configuration.GetConnectionString("Postgres"));
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddDbContextPool<ForumDbContext>(options => options
-    .UseNpgsql(connectionString));
 
 var app = builder.Build();
 

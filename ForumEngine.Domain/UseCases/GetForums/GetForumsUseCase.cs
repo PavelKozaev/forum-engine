@@ -1,6 +1,6 @@
 ﻿namespace ForumEngine.Domain.UseCases.GetForums
 {
-    public class GetForumsUseCase : IGetForumsUseCase
+    internal class GetForumsUseCase : IGetForumsUseCase
     {
         private readonly IGetForumsStorage _storage;
 
