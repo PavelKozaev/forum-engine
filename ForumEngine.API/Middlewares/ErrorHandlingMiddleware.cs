@@ -17,14 +17,18 @@ namespace ForumEngine.API.Middlewares
 
         public async Task InvokeAsync(
             HttpContext httpContext,
+            ILogger<ErrorHandlingMiddleware> logger,
             ProblemDetailsFactory problemDetailsFactory)
         {
             try
             {
+                logger.LogError("Error handling started for request in path {RequestPath}", httpContext.Request.Path.Value);
                 await _next.Invoke(httpContext);
             }
             catch (Exception exception)
             {
+                logger.LogError("Error has happened with {RequestPath}, the message is {ErrorMessage}", httpContext.Request.Path, exception.Message);
+                
                 var problemDetails = exception switch
                 {
                     IntentionManagerException intentionManagerException => problemDetailsFactory.CreateFrom(httpContext, intentionManagerException),

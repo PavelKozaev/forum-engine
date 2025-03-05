@@ -8,14 +8,14 @@ volumes:
   tfa-pg:
   tfa-logs:
 
-services: 
+services:
   postgres:
     container_name: 'tfa-pg'
     image: 'postgres:latest'
     ports:
       - '5432:5432'
     environment:
-      POSTGRES_PASSWORD: 'myPassword'
+      POSTGRES_PASSWORD: 'admin'
     volumes:
       - tfa-pg:/var/lib/postgresql/data
 
@@ -28,6 +28,7 @@ services:
     environment:
       discovery.type: 'single-node'
       plugins.security.disabled: 'true'
+      OPENSEARCH_INITIAL_ADMIN_PASSWORD: 'Opensearch@Admin22#'
     volumes:
       - tfa-logs:/usr/share/opensearch/data
   

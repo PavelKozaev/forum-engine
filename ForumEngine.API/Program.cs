@@ -26,6 +26,8 @@ builder.Services.AddLogging(b => b.AddSerilog(new LoggerConfiguration()
         .WriteTo.Console())
     .CreateLogger()));
 
+var connectionString = builder.Configuration.GetConnectionString("Postgres");
+
 builder.Services.AddScoped<IGetForumsUseCase, GetForumsUseCase>();
 builder.Services.AddScoped<IGetForumsStorage, GetForumsStorage>();
 builder.Services.AddScoped<ICreateTopicUseCase, CreateTopicUseCase>();
@@ -43,7 +45,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContextPool<ForumDbContext>(options => options
-    .UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+    .UseNpgsql(connectionString));
 
 var app = builder.Build();
 
