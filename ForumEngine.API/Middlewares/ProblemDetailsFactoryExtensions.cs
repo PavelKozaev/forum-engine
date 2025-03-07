@@ -17,9 +17,9 @@ namespace ForumEngine.API.Middlewares
 
         public static ProblemDetails CreateFrom(this ProblemDetailsFactory factory, HttpContext httpContext, DomainException domainException) =>
             factory.CreateProblemDetails(httpContext,
-                domainException.ErrorCode switch 
+                domainException.DomainErrorCode switch 
                 { 
-                    ErrorCode.Gone => StatusCodes.Status410Gone,
+                    DomainErrorCode.Gone => StatusCodes.Status410Gone,
                     _ => StatusCodes.Status500InternalServerError
                 },
                 detail: domainException.Message);

@@ -2,7 +2,7 @@
 {
     public class ForumNotFoundException : DomainException
     {
-        public ForumNotFoundException(Guid forumId) : base(ErrorCode.Gone, $"Forum with id {forumId} was not found.")
+        public ForumNotFoundException(Guid forumId) : base(DomainErrorCode.Gone, $"Forum with id {forumId} was not found.")
         {
             
         }
@@ -10,11 +10,11 @@
 
     public abstract class DomainException : Exception
     {
-        public ErrorCode ErrorCode { get; }
+        public DomainErrorCode DomainErrorCode { get; }
 
-        protected DomainException(ErrorCode errorCode, string message) : base(message)
+        protected DomainException(DomainErrorCode domainErrorCode, string message) : base(message)
         {
-            ErrorCode = errorCode;
+            DomainErrorCode = domainErrorCode;
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace ForumEngine.Domain.Exceptions
 {
-    public enum ErrorCode
+    public enum DomainErrorCode
     {
         Gone = 410
     }

@@ -1,5 +1,6 @@
 ﻿using ForumEngine.Domain.UseCases.CreateTopic;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ForumEngine.Storage.Storages
 {
@@ -45,12 +46,6 @@ namespace ForumEngine.Storage.Storages
                     Title = t.Title,
                     CreatedAt = t.CreatedAt
                 }).FirstAsync();
-
-        }
-
-        public Task<bool> ForumExists(Guid forumId, CancellationToken cancellationToken)
-        {
-            return _dbContext.Forums.AnyAsync(f => f.ForumId == forumId, cancellationToken);
         }
     }
 }

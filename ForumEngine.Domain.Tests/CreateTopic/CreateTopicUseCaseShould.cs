@@ -1,30 +1,36 @@
 using FluentAssertions;
-using ForumEngine.Domain.Exceptions;
+using FluentValidation;
 using ForumEngine.Domain.Authentication;
+using ForumEngine.Domain.Authorization;
+using ForumEngine.Domain.Exceptions;
+using ForumEngine.Domain.Models;
 using ForumEngine.Domain.UseCases.CreateTopic;
+using ForumEngine.Domain.UseCases.GetForums;
 using Moq;
 using Moq.Language.Flow;
-using ForumEngine.Domain.Authorization;
-using FluentValidation;
 
-namespace ForumEngine.Domain.Tests
+namespace ForumEngine.Domain.Tests.CreateTopic
 {
     public class CreateTopicUseCaseShould
     {
         private readonly CreateTopicUseCase sut;
         private readonly Mock<ICreateTopicStorage> storage;
-        private readonly ISetup<ICreateTopicStorage, Task<bool>> forumExistsSetup;
-        private readonly ISetup<ICreateTopicStorage, Task<Models.Topic>> createTopicSetup;
+        private readonly ISetup<ICreateTopicStorage, Task<Topic>> createTopicSetup;
         private readonly ISetup<IIdentity, Guid> getCurrentUserIdSetup;
         private readonly ISetup<IIntentionManager, bool> intentionIsAllowedSetup;
         private readonly Mock<IIntentionManager> intentionManger;
+        private readonly Mock<IGetForumsStorage> getForumsStorage;
+        private readonly ISetup<IGetForumsStorage, Task<IEnumerable<Forum>>> getForumsSetup;
 
         public CreateTopicUseCaseShould()
         {
             storage = new Mock<ICreateTopicStorage>();
-            forumExistsSetup = storage.Setup(x => x.ForumExists(It.IsAny<Guid>(), It.IsAny<CancellationToken>()));
-            createTopicSetup = storage.Setup(x => x.CreateTopic(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()));
+            createTopicSetup = storage
+                .Setup(x => x.CreateTopic(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()));
 
+            getForumsStorage = new Mock<IGetForumsStorage>();
+            getForumsSetup = getForumsStorage.Setup(s => s.GetForums(It.IsAny<CancellationToken>()));
+            
             var identity = new Mock<IIdentity>();
             var identityProvider = new Mock<IIdentityProvider>();
             identityProvider.Setup(x => x.Current).Returns(identity.Object);
@@ -38,7 +44,7 @@ namespace ForumEngine.Domain.Tests
                 .Setup(v => v.ValidateAsync(It.IsAny<CreateTopicCommand>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new FluentValidation.Results.ValidationResult());
 
-            sut = new CreateTopicUseCase(validator.Object, intentionManger.Object, identityProvider.Object, storage.Object);
+            sut = new CreateTopicUseCase(validator.Object, intentionManger.Object, identityProvider.Object, getForumsStorage.Object, storage.Object);
         }
 
         [Fact]
@@ -60,12 +66,10 @@ namespace ForumEngine.Domain.Tests
             var forumId = Guid.Parse("53b3477c-6c44-4717-8c82-8b95677feb89");
 
             intentionIsAllowedSetup.Returns(true);
-            forumExistsSetup.ReturnsAsync(false);
+            getForumsSetup.ReturnsAsync(Array.Empty<Forum>());
                         
             await sut.Invoking(x => x.Execute(new CreateTopicCommand(forumId, "Some tile"), CancellationToken.None))
                 .Should().ThrowAsync<ForumNotFoundException>();
-
-            storage.Verify(x => x.ForumExists(forumId, It.IsAny<CancellationToken>()));
         }
 
         [Fact]
@@ -75,7 +79,7 @@ namespace ForumEngine.Domain.Tests
             var userId = Guid.Parse("82b3484c-6c44-4717-8c82-8b95677feb76");
 
             intentionIsAllowedSetup.Returns(true);
-            forumExistsSetup.ReturnsAsync(true);
+            getForumsSetup.ReturnsAsync([new () { Id = forumId }]);
             getCurrentUserIdSetup.Returns(userId);
 
             var expected = new Models.Topic();

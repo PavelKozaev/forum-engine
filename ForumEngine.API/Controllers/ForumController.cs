@@ -1,6 +1,7 @@
 ﻿using ForumEngine.API.Models;
 using ForumEngine.Domain.UseCases.CreateTopic;
 using ForumEngine.Domain.UseCases.GetForums;
+using ForumEngine.Domain.UseCases.GetTopics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ForumEngine.API.Controllers
@@ -16,14 +17,14 @@ namespace ForumEngine.API.Controllers
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [HttpGet(Name = nameof(GetForums))]
-        [ProducesResponseType(200, Type = typeof(Models.Forum[]))]
+        [ProducesResponseType(200, Type = typeof(Forum[]))]
         public async Task<IActionResult> GetForums(
             [FromServices] IGetForumsUseCase useCase,
             CancellationToken cancellationToken)
         {
             var forums = await useCase.Execute(cancellationToken);
 
-            return Ok(forums.Select(x => new Models.Forum
+            return Ok(forums.Select(x => new Forum
             {
                 Id = x.Id,
                 Title = x.Title
@@ -34,7 +35,7 @@ namespace ForumEngine.API.Controllers
         [ProducesResponseType(400)]
         [ProducesResponseType(403)]
         [ProducesResponseType(410)]
-        [ProducesResponseType(201, Type = typeof(Models.Topic))]
+        [ProducesResponseType(201, Type = typeof(Topic))]
         public async Task<IActionResult> CreateTopic(
             Guid forumId,
             [FromBody] CraeteTopic request,
@@ -44,12 +45,25 @@ namespace ForumEngine.API.Controllers
 
             var command = new CreateTopicCommand(forumId, request.Title);
             var topic = await useCase.Execute(command, cancellationToken);
-            return CreatedAtRoute(nameof(GetForums), new Models.Topic
+            return CreatedAtRoute(nameof(GetForums), new Topic
             {
                 Id = forumId,
                 Title = topic.Title,
                 CreatedAt = topic.CreatedAt
             });
+        }
+
+        [HttpGet("{forumId:guid}/topics")]
+        public async Task<IActionResult> GetTopics(
+            [FromRoute] Guid forumId,
+            [FromQuery] int skip,
+            [FromQuery] int take,
+            [FromServices] IGetTopicsUseCase useCase,
+            CancellationToken cancellationToken)
+        {
+            var query = new GetTopicsQuery(forumId, skip, take);
+            var (resources, totalCount) = await useCase.Execute(query, cancellationToken);
+            return Ok(new { resources, totalCount });
         }
     }
 }

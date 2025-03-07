@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using ForumEngine.Domain.UseCases.CreateTopic;
 
-namespace ForumEngine.Domain.Tests
+namespace ForumEngine.Domain.Tests.CreateTopic
 {
     public class CreateTopicCommandValidatorShould
     {

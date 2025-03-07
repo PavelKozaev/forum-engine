@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using ForumEngine.Domain.Exceptions;
 
 namespace ForumEngine.Domain.UseCases.CreateTopic
 {
@@ -6,10 +7,10 @@ namespace ForumEngine.Domain.UseCases.CreateTopic
     {
         public CreateTopicCommandValidator()
         {
-            RuleFor(c => c.ForumId).NotEmpty().WithErrorCode("Empty");
+            RuleFor(c => c.ForumId).NotEmpty().WithErrorCode(ValidationErrorCode.Empty);
             RuleFor(c => c.Title).Cascade(CascadeMode.Stop)
-                .NotEmpty().WithErrorCode("Empty")
-                .MaximumLength(100).WithErrorCode("TooLong");
+                .NotEmpty().WithErrorCode(ValidationErrorCode.Empty)
+                .MaximumLength(100).WithErrorCode(ValidationErrorCode.TooLong);
         }
     }
 }

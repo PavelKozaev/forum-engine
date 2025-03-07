@@ -1,7 +1,7 @@
-﻿using ForumEngine.Domain.Exceptions;
-using ForumEngine.Domain.Authentication;
+﻿using ForumEngine.Domain.Authentication;
 using ForumEngine.Domain.Authorization;
 using FluentValidation;
+using ForumEngine.Domain.UseCases.GetForums;
 
 namespace ForumEngine.Domain.UseCases.CreateTopic
 {
@@ -10,17 +10,20 @@ namespace ForumEngine.Domain.UseCases.CreateTopic
         private readonly IValidator<CreateTopicCommand> _validator;
         private readonly IIntentionManager _intentionManager;
         private readonly IIdentityProvider _identityProvider;
+        private readonly IGetForumsStorage _getForumsStorage;
         private readonly ICreateTopicStorage _storage;
 
         public CreateTopicUseCase(
             IValidator<CreateTopicCommand> validator,
             IIntentionManager intentionManager,
             IIdentityProvider identityProvider,
+            IGetForumsStorage getForumsStorage,
             ICreateTopicStorage storage)
         {
             _validator = validator;
             _intentionManager = intentionManager;
             _identityProvider = identityProvider;
+            _getForumsStorage = getForumsStorage;
             _storage = storage;
         }
 
@@ -31,8 +34,7 @@ namespace ForumEngine.Domain.UseCases.CreateTopic
             var (forumId, title) = command;
             _intentionManager.ThrowIfForbidden(TopicIntention.Create);
 
-            var forumExists = await _storage.ForumExists(forumId, cancellationToken);
-            if (!forumExists) throw new ForumNotFoundException(forumId);
+            await _getForumsStorage.ThrowIfForumNotFound(forumId, cancellationToken);
 
             return await _storage.CreateTopic(forumId, _identityProvider.Current.UserId, title, cancellationToken);   
         }
