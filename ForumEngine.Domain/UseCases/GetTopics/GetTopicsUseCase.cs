@@ -1,5 +1,6 @@
 using FluentValidation;
 using ForumEngine.Domain.Models;
+using ForumEngine.Domain.UseCases.GetForums;
 
 namespace ForumEngine.Domain.UseCases.GetTopics
 {
@@ -7,12 +8,16 @@ namespace ForumEngine.Domain.UseCases.GetTopics
     {
         private readonly IValidator<GetTopicsQuery> _validator;
         private readonly IGetTopicsStorage _storage;
+        private readonly IGetForumsStorage _getForumsStorage;
 
         public GetTopicsUseCase(
             IValidator<GetTopicsQuery> validator,
-            IGetTopicsStorage storage)
+            IGetForumsStorage getForumsStorage,
+            IGetTopicsStorage storage
+            )
         {
             _validator = validator;
+            _getForumsStorage = getForumsStorage;
             _storage = storage;
 
         }
@@ -21,7 +26,7 @@ namespace ForumEngine.Domain.UseCases.GetTopics
             GetTopicsQuery query, CancellationToken cancellationToken)
         {
             await _validator.ValidateAndThrowAsync(query, cancellationToken);
-
+            await _getForumsStorage.ThrowIfForumNotFound(query.ForumId, cancellationToken);
             return await _storage.GetTopics(query.ForumId, query.Skip, query.Take, cancellationToken);
         }
     }

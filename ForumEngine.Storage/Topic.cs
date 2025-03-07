@@ -15,7 +15,7 @@ namespace ForumEngine.Storage
         public Guid UserId { get; set; }
 
         public Guid ForumId { get; set; }
-                
+        [MaxLength(100)]        
         public string Title { get; set; }
 
         [ForeignKey(nameof(UserId))]
