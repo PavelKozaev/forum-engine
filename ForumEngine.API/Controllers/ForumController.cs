@@ -1,4 +1,6 @@
-﻿using ForumEngine.API.Models;
+﻿using AutoMapper;
+using ForumEngine.API.Models;
+using ForumEngine.Domain.UseCases.CreateForum;
 using ForumEngine.Domain.UseCases.CreateTopic;
 using ForumEngine.Domain.UseCases.GetForums;
 using ForumEngine.Domain.UseCases.GetTopics;
@@ -10,25 +12,37 @@ namespace ForumEngine.API.Controllers
     [Route("forums")]
     public class ForumController : ControllerBase
     {
+        [HttpPost]
+        [ProducesResponseType(400)]
+        [ProducesResponseType(403)]
+        [ProducesResponseType(201, Type = typeof(Forum))]
+        public async Task<IActionResult> CreateForum(
+            [FromBody] CreateForum request,
+            [FromServices] ICreateForumUseCase useCase,
+            [FromServices] IMapper mapper,
+            CancellationToken cancellationToken)
+        {
+            var command = new CreateForumCommand(request.Title);
+            var forum = await useCase.Execute(command, cancellationToken);
+            return CreatedAtRoute(nameof(GetForums), mapper.Map<Forum>(forum));
+        }
+        
         /// <summary>
         /// Get list of every forum
         /// </summary>
         /// <param name="useCase"></param>
+        /// <param name="mapper"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         [HttpGet(Name = nameof(GetForums))]
         [ProducesResponseType(200, Type = typeof(Forum[]))]
         public async Task<IActionResult> GetForums(
             [FromServices] IGetForumsUseCase useCase,
+            [FromServices] IMapper mapper,
             CancellationToken cancellationToken)
         {
             var forums = await useCase.Execute(cancellationToken);
-
-            return Ok(forums.Select(x => new Forum
-            {
-                Id = x.Id,
-                Title = x.Title
-            }));
+            return Ok(forums.Select(mapper.Map<Forum>));
         }
 
         [HttpPost("{forumId:guid}/topics")]
@@ -40,17 +54,13 @@ namespace ForumEngine.API.Controllers
             Guid forumId,
             [FromBody] CraeteTopic request,
             [FromServices] ICreateTopicUseCase useCase,
+            [FromServices] IMapper mapper,
             CancellationToken cancellationToken)
         {
 
             var command = new CreateTopicCommand(forumId, request.Title);
             var topic = await useCase.Execute(command, cancellationToken);
-            return CreatedAtRoute(nameof(GetForums), new Topic
-            {
-                Id = forumId,
-                Title = topic.Title,
-                CreatedAt = topic.CreatedAt
-            });
+            return CreatedAtRoute(nameof(GetForums), mapper.Map<Topic>(topic));
         }
 
         [HttpGet("{forumId:guid}/topics")]
@@ -62,16 +72,12 @@ namespace ForumEngine.API.Controllers
             [FromQuery] int skip,
             [FromQuery] int take,
             [FromServices] IGetTopicsUseCase useCase,
+            [FromServices] IMapper mapper,
             CancellationToken cancellationToken)
         {
             var query = new GetTopicsQuery(forumId, skip, take);
             var (resources, totalCount) = await useCase.Execute(query, cancellationToken);
-            return Ok(new { resources = resources.Select(r => new Topic
-            {
-                Id = r.Id,
-                Title = r.Title,
-                CreatedAt = r.CreatedAt
-            }), totalCount });
+            return Ok(new { resources = resources.Select(mapper.Map<Topic>), totalCount });
         }
     }
 }

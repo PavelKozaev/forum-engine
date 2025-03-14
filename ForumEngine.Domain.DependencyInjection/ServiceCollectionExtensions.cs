@@ -2,6 +2,7 @@ using FluentValidation;
 using ForumEngine.Domain.Authentication;
 using ForumEngine.Domain.Authorization;
 using ForumEngine.Domain.Models;
+using ForumEngine.Domain.UseCases.CreateForum;
 using ForumEngine.Domain.UseCases.CreateTopic;
 using ForumEngine.Domain.UseCases.GetForums;
 using ForumEngine.Domain.UseCases.GetTopics;
@@ -14,6 +15,8 @@ namespace ForumEngine.Domain.DependencyInjection
         public static IServiceCollection AddForumDomain(this IServiceCollection services)
         {
             services
+                .AddScoped<ICreateForumUseCase, CreateForumUseCase>()
+                .AddScoped<IIntentionResolver, ForumIntentionResolver>()
                 .AddScoped<IGetForumsUseCase, GetForumsUseCase>()
                 .AddScoped<ICreateTopicUseCase, CreateTopicUseCase>()
                 .AddScoped<IGetTopicsUseCase, GetTopicsUseCase>()
@@ -24,8 +27,6 @@ namespace ForumEngine.Domain.DependencyInjection
                 .AddScoped<IIdentityProvider, IdentityProvider>();
 
             services.AddValidatorsFromAssemblyContaining<Forum>(includeInternalTypes: true);
-
-            services.AddMemoryCache();
 
             return services;
         }
