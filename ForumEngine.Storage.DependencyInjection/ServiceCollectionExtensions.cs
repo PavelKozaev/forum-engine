@@ -6,6 +6,8 @@ using ForumEngine.Storage.Storages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using ForumEngine.Domain.UseCases.SignIn;
+using ForumEngine.Domain.UseCases.SignOn;
 
 namespace ForumEngine.Storage.DependencyInjection
 {
@@ -18,6 +20,8 @@ namespace ForumEngine.Storage.DependencyInjection
                 .AddScoped<IGetForumsStorage, GetForumsStorage>()
                 .AddScoped<ICreateTopicStorage, CreateTopicStorage>()
                 .AddScoped<IGetTopicsStorage, GetTopicsStorage>()
+                .AddScoped<ISignOnStorage, SignOnStorage>()
+                .AddScoped<ISignInStorage, SignInStorage>()
                 .AddScoped<IGuidFactory, GuidFactory>()
                 .AddScoped<IMomentProvider, MomentProvider>()
                 .AddDbContextPool<ForumDbContext>(options => options

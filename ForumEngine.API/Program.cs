@@ -1,12 +1,16 @@
 using System.Reflection;
+using ForumEngine.API.Authentication;
 using ForumEngine.API.DependencyInjection;
 using ForumEngine.API.Middlewares;
+using ForumEngine.Domain.Authentication;
 using ForumEngine.Domain.DependencyInjection;
 using ForumEngine.Storage.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddApiLogging(builder.Configuration, builder.Environment);
+builder.Services.Configure<AuthenticationConfiguration>(builder.Configuration.GetSection("Authentication").Bind);
+builder.Services.AddScoped<IAuthTokenStorage, AuthTokenStorage>();
 
 builder.Services
     .AddForumDomain()

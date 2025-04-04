@@ -6,6 +6,8 @@ using ForumEngine.Domain.UseCases.CreateForum;
 using ForumEngine.Domain.UseCases.CreateTopic;
 using ForumEngine.Domain.UseCases.GetForums;
 using ForumEngine.Domain.UseCases.GetTopics;
+using ForumEngine.Domain.UseCases.SignIn;
+using ForumEngine.Domain.UseCases.SignOn;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ForumEngine.Domain.DependencyInjection
@@ -20,11 +22,17 @@ namespace ForumEngine.Domain.DependencyInjection
                 .AddScoped<IGetForumsUseCase, GetForumsUseCase>()
                 .AddScoped<ICreateTopicUseCase, CreateTopicUseCase>()
                 .AddScoped<IGetTopicsUseCase, GetTopicsUseCase>()
+                .AddScoped<ISignOnUseCase, SignOnUseCase>()
+                .AddScoped<ISignInUseCase, SignInUseCase>()
                 .AddScoped<IIntentionResolver, TopicIntentionResolver>();
                 
             services
                 .AddScoped<IIntentionManager, IntentionManager>()
-                .AddScoped<IIdentityProvider, IdentityProvider>();
+                .AddScoped<IIdentityProvider, IdentityProvider>()
+                .AddScoped<IPasswordManager, PasswordManager>()
+                .AddScoped<IAuthenticationService, AuthenticationService>()
+                .AddScoped<ISymmetricDecryptor, AesSymmetricEncryptorDecryptor>()
+                .AddScoped<ISymmetricEncryptor, AesSymmetricEncryptorDecryptor>();
 
             services.AddValidatorsFromAssemblyContaining<Forum>(includeInternalTypes: true);
 
